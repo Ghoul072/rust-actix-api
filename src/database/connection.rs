@@ -9,5 +9,5 @@ pub fn get_pool() -> ConnectionPool {
     dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let connection_manager = ConnectionManager::<PgConnection>::new(database_url);
-    Pool::builder().build(connection_manager).expect("Failed to create pool")
+    return Pool::builder().build(connection_manager).expect("Failed to create pool");
 }
