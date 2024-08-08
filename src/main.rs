@@ -8,9 +8,11 @@ pub mod database;
 pub mod routes;
 pub mod auth;
 
-pub fn create_connection() {
+pub fn create_connection() -> PgConnection {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url));
+    return PgConnection::establish(&database_url).expect(
+        &format!("Error connecting to {}", database_url)
+    );
 }
 
 #[get("/")]
