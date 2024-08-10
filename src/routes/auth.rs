@@ -67,3 +67,7 @@ async fn login(
         Err(_) => { Ok(HttpResponse::BadRequest().body("Username or Password missing")) }
     }
 }
+
+pub fn init_routes(cfg: &mut web::ServiceConfig) {
+    cfg.service(login);
+}

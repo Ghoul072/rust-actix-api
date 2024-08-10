@@ -17,6 +17,10 @@ async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello World!")
 }
 
+pub fn init_routes(cfg: &mut web::ServiceConfig) {
+    cfg.configure(routes::auth::init_routes);
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
@@ -35,7 +39,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .app_data(web::Data::from(ctx.clone()))
             .service(hello)
-            .service(routes::auth::login)
+            .configure(init_routes)
     })
         .bind(format!("{}:{}", host, port))?
         .run();
