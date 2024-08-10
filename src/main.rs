@@ -1,18 +1,15 @@
-use diesel::{ Connection, PgConnection };
 use dotenvy::dotenv;
-use std::env;
+use std::{ env, sync::Arc };
 use actix_web::{ get, middleware::Logger, web, App, HttpResponse, HttpServer, Responder };
 use log::info;
 
 pub mod database;
 pub mod routes;
 pub mod auth;
+pub mod utils;
 
-pub fn create_connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    return PgConnection::establish(&database_url).expect(
-        &format!("Error connecting to {}", database_url)
-    );
+pub struct AppContext {
+    pool: database::connection::ConnectionPool,
 }
 
 #[get("/")]
@@ -30,14 +27,15 @@ async fn main() -> std::io::Result<()> {
 
     let host = env::var("HOST").expect("Host not set");
     let port = env::var("PORT").expect("Port not set");
-    let pool = database::connection::get_pool();
+    let pool = database::connection::create_pool();
+    let ctx = Arc::new(AppContext { pool });
 
     let server = HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .app_data(pool.clone())
+            .app_data(web::Data::from(ctx.clone()))
             .service(hello)
-            .route("/users", web::get().to(routes::auth::get_users))
+            .service(routes::auth::login)
     })
         .bind(format!("{}:{}", host, port))?
         .run();
