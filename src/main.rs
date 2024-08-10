@@ -7,6 +7,7 @@ pub mod database;
 pub mod routes;
 pub mod auth;
 pub mod utils;
+pub mod errors;
 
 pub struct AppContext {
     pool: database::connection::ConnectionPool,
