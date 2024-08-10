@@ -1,13 +1,20 @@
-use actix_web::{ get, web, Error, HttpResponse, Responder };
+use actix_web::{ get, post, web, Error, HttpResponse, Responder };
 use serde::{ Deserialize, Serialize };
 
 use crate::{
     auth,
     database::connection::get_connection,
     errors::login::INVALID_USERNAME_OR_PASSWORD,
-    utils::auth::get_user_by_username,
+    utils::{ self, auth::get_user_by_username },
     AppContext,
 };
+
+#[derive(Debug, Deserialize)]
+pub struct RegisterRequest {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct LoginRequest {
@@ -19,6 +26,31 @@ pub struct LoginRequest {
 pub struct LoginResponse {
     pub access_token: String,
     pub refresh_token: String,
+}
+
+#[post("/register")]
+async fn register(
+    req: Result<web::Json<RegisterRequest>, Error>,
+    data: web::Data<AppContext>
+) -> Result<impl Responder, Error> {
+    match req {
+        Ok(body) => {
+            let mut connection = get_connection(&data.pool);
+
+            match
+                utils::auth::create_user(
+                    &body.username,
+                    &body.email,
+                    &body.password,
+                    &mut connection
+                )
+            {
+                Ok(user) => { Ok(HttpResponse::Created().json(user)) }
+                Err(err) => { Ok(HttpResponse::Conflict().body(err.message())) }
+            }
+        }
+        Err(_) => { Ok(HttpResponse::BadRequest().body("Invalid payload")) }
+    }
 }
 
 #[get("/login")]
@@ -66,4 +98,5 @@ async fn login(
 
 pub fn init_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
+    cfg.service(register);
 }

@@ -16,6 +16,12 @@ pub struct User {
     pub updated_at: Option<chrono::NaiveDateTime>,
 }
 
+#[derive(Queryable, Serialize)]
+pub struct CreatedUser {
+    pub username: String,
+    pub email: String,
+}
+
 #[derive(Queryable, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
